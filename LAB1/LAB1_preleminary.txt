@@ -1,0 +1,259 @@
+CS224
+Lab 1
+Section 3
+İdil Atmaca
+22002491
+03/10/2022
+
+
+
+
+
+
+
+
+
+
+
+##
+## LAB1 Preleminary Work 1. Swap 
+##  İdil Atmaca 22002491 CS224-3
+
+##	creates an array of maximum size of 20 elements
+##	asks the user the number of elements and then enters the elements one by one
+##	 Displays array contents
+##	 Swap and displays agaim
+
+
+	.text		
+	.globl __start	
+
+__start:
+	la $a0,prompt	# output prompt message on terminal
+	li $v0,4	# syscall 4 prints the string
+	syscall
+
+	li $v0, 5	# syscall 5 reads an integer
+	syscall
+
+	sw $v0, customSize #get the inputed value and store it in customSize variable
+	jal readArrayValues  #jump to the function readArrayValues
+	jal printArray  #jump to the function printArray
+	la $a0, 0($t0)
+	jal reverseElements
+	
+	la $a0,reversedMsg	# output prompt message on terminal
+	li $v0,4	# syscall 4 prints the string
+	syscall
+	jal printArray
+	
+	li $v0,10		# system call to exit
+	syscall		#    bye bye
+	
+	#reads inputted values from the user one by one
+	readArrayValues:
+		lw $t1, customSize #get the array size identified by the user and load to t1
+		la $t0, origArray #get the address of the array and put it into t0 (now $t0 points to beginning of the array)
+		
+		beq $zero,$t1,return #checks for array size 0		
+		
+		readValue:
+		
+			la $a0,prompt1	# output prompt message for getting each item in the array
+			li $v0,4	# syscall 4 prints the string
+			syscall
+			
+			li $v0,5 #read the value at current index
+			syscall
+			sb $v0,0($t0) #get the read value and put it to current addres of the array
+			addi $t0, $t0, 4 #update the addres of the array
+			subi $t1,$t1,1 #update counter
+			bgt $t1, $zero, readValue #go through the readValue function until all the elements are finalized
+		jr $ra
+	
+	printArray:
+		la $t0, origArray #get the array pointers' addres
+		lw $t1, customSize #get the array size identified by the user and load to t1
+		la $a0,printMsg	# output prompt message for getting each item in the array
+		li $v0,4	# syscall 4 prints the string
+		syscall
+		printElement:
+			lw $a0,0($t0)	# get the value of the current index
+			li $v0, 1 # print the current element
+			syscall
+			addi $t0,$t0,4
+			subi $t1,$t1,1
+			
+			
+			#add space between the elements
+			space:
+			la $a0,space0	# output prompt message on terminal
+			li $v0,4	# syscall 4 prints the string
+			syscall
+			
+			bgt $t1, $zero, printElement
+			
+			
+		subi $t0,$t0,4 #t0 points to the last element on the array
+		
+		la $a0,endl	# system call to print
+		li $v0,4		# out a newline
+		syscall
+		
+		jr $ra	
+	reverseElements:
+		la $t1, origArray #get the array pointers' addres	
+		reverse:
+			lw $t2, 0($t1) #element from the beginning of the array
+			lw $t3, 0($t0) #element from the end of the array
+			
+			#swap
+			sw $t2, 0($t0)
+			sw $t3, 0($t1)
+			
+			#update adress
+			addi $t1,$t1,4
+			subi $t0,$t0,4
+			
+			bgt $t0,$t1,reverse #continue to reverse items until we reach to middle
+		jr $ra	
+	return:
+			li $v0,10	# system call to exit
+			syscall		#    bye bye	
+		jr $ra		
+			
+			
+			
+##data segment
+
+	.data
+prompt:	.asciiz "Enter the size of the array: "
+prompt1:.asciiz "Enter the next value in the array: "
+printMsg: .asciiz "Array items are: "
+reversedMsg: .asciiz "(reversed) "
+origArray: .space 80 #creates an array of maximum size of 20 elements
+customSize: .word 0 #size of the array
+endl:	.asciiz "\n"
+space0: .asciiz " "
+
+
+##
+## LAB1 Preleminary Work 2. ArithmeticExpression 
+##  İdil Atmaca 22002491 CS224-3
+
+#					 	#
+#		find A = (B / C + D*B -C) Mod B		#
+#						#
+#################################
+
+	.text		
+	.globl __start	
+
+__start:
+	la $a0,prompt	# output prompt message on terminal
+	li $v0,4	# syscall 4 prints the string
+	syscall
+
+	li $v0, 5	# syscall 5 reads an integer
+	syscall
+
+	sw $v0,B #initialize the number B
+	
+	
+	la $a0,prompt2	# output prompt message on terminal
+	li $v0,4	# syscall 4 prints the string
+	syscall
+
+	li $v0, 5	# syscall 5 reads an integer
+	syscall
+
+	sw $v0,C #initialize the number C
+	
+	
+	la $a0,prompt3	# output prompt message on terminal
+	li $v0,4	# syscall 4 prints the string
+	syscall
+
+	li $v0, 5	# syscall 5 reads an integer
+	syscall
+
+	sw $v0,D #initialize the number D
+	
+	
+	lw $t0,B
+	lw $t1,C
+	lw $t2,D
+	lw $t3,A
+	
+	
+	jal division # B / C
+	
+	move $t3,$t6  #put the divisions' answer back to the A's register
+	
+	mul $t4,$t2,$t0   #D * B 
+	
+	add $t3,$t3,$t4 # A = B/C + D*B
+	sub $t3,$t3,$t1 # A = B/C + D*B - C 
+	
+	
+	move $t1,$t0 
+	move $t0, $t3
+	jal division
+	
+	move $t3,$t4 #put the mod result to the A's register
+	
+
+	la $a0,ans1	# print string before result
+	li $v0,4
+	syscall
+	
+	move $a0,$t3	# get the value of the current index
+	li $v0, 1 # print the current element
+	syscall
+
+
+	la $a0,endl	# system call to print
+	li $v0,4		# out a newline
+	syscall
+
+	li $v0,10		# system call to exit
+	syscall		#    bye bye
+	
+	
+	#in the return value, $t6 is the division result, $t4 is remainder
+	division:
+		move $t4, $t0 #load B
+		move $t5, $t1 #load C
+		lw $t6, A
+		
+		#decide whether B > C
+		sub $t7,$t4,$t5
+		bgt $t7,$zero,op
+		jr $ra	
+		op:
+			sub $t4,$t4,$t5
+			addi $t6,$t6,1
+			bge $t4,$t5,op
+			
+		jr $ra		
+			
+			
+
+
+##	 data segment		
+
+
+	.data
+B: .word 0
+C: .word 0
+D: .word 0
+A: .word 0	
+prompt:	.asciiz "Enter a value for B: "
+prompt2:.asciiz "Enter a value for C: "
+prompt3:.asciiz "Enter a value for D: "
+ans1:	.asciiz "A = "
+endl:	.asciiz "\n"
+
+
+
+

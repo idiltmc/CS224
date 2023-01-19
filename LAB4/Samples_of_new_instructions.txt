@@ -1,0 +1,56 @@
+jm:
+20040010
+ac040050
+c0000032
+20050003
+20060006
+subi:
+07000420
+c4040007
+c4a60002
+
+
+# Sample execution blocks including new instructions
+
+# To test an instruction, assemble the code block and place it in imem module. 
+# All blocks start at address 0x0
+	
+# jm
+addi $a0, $zero, 0x10
+sw $a0, 0x50($zero)     # Stores 0x10 to address 0x50
+jm 0x50($zero)          # Jumps to address 0x10
+addi $a1, $zero, 3      # Not executed
+addi $a2, $zero, 6      # Jumped to here
+
+# bgt
+addi $a0, $zero, 3             
+addi $a1, $zero, 12
+addi $a2, $zero, 2
+sub $a1, $a1, $a0
+bgt $a1, $a0, -2        # taken as long as $a1>$a0
+add $a2, $a2, $a1       # $a2 = 2 + 3 = 5
+
+# blt
+addi $a0, $zero, 12
+addi $a1, $zero, 3
+addi $a2, $zero, 2
+addi $a1, $a1, 3
+blt $a1, $a0, -2        # taken as long as $a1<$a0
+add $a2, $a2, $a1       # $a2 = 2 + 12 = 14
+
+# jalm
+addi $ra, $zero, 0
+addi $a0, $zero, 0x14
+sw $a0, 0x50($zero)     # stores 0x14 to address 0x50
+jalm $t0, 0x50($zero)   # jumps to 0x14, sets $t0 = 0x10 (address of next instr.)
+addi $a1, $zero, 3      # not executed
+addi $a2, $zero, 6      # jumped to here
+add $a3, $a2, $t0       # $a3 = 0x6 + 0x10 = 0x16
+
+
+# subi
+addi $a0, $zero, 7
+subi $a1, $a0, 3        # $a1 = 7 - 3 = 4
+subi $a2, $a1, 4        # $a2 = 4 - 4 = 0
+
+
